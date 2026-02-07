@@ -122,7 +122,7 @@ function FacilityInfoPopover({ facility }: { facility: Facility }) {
       <PopoverTrigger asChild>
         <button 
           className="p-2 rounded-full hover:bg-muted transition-colors"
-          onClick={(e) => e.stopPropagation()}
+          onPointerDown={(e) => e.stopPropagation()}
         >
           <Info className="w-4 h-4 text-primary" />
         </button>
