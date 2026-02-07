@@ -128,6 +128,12 @@ export default function ChoroplethMap({
             });
           },
         }).addTo(map);
+
+        // Fit map bounds to Ghana
+        const bounds = geoJsonLayerRef.current.getBounds();
+        if (bounds.isValid()) {
+          map.fitBounds(bounds, { padding: [20, 20] });
+        }
       })
       .catch((err) => console.error("Failed to load GeoJSON:", err));
   }, [regions, selectedRegion, onRegionClick]);
