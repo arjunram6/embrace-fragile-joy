@@ -10,6 +10,12 @@ type RegionSummary = {
   counts: { ready: number; fragile: number; absent: number; total: number };
 };
 
+type Evidence = {
+  field: string;
+  match: string;
+  snippet: string;
+};
+
 type Facility = {
   facility_id: string;
   name: string;
@@ -18,6 +24,7 @@ type Facility = {
     confidence: number;
     missing_required: string[];
     flags: { type: string; severity: string; message: string }[];
+    evidence?: Evidence[];
   };
 };
 
