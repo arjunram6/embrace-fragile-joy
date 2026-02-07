@@ -3,8 +3,7 @@ import { MapContainer, TileLayer, GeoJSON } from "react-leaflet";
 import type { Feature, FeatureCollection, Geometry } from "geojson";
 import type { Layer, PathOptions } from "leaflet";
 
-const GEOJSON_URL =
-  "https://github.com/wmgeolab/geoBoundaries/raw/9469f09/releaseData/gbOpen/GHA/ADM1/geoBoundaries-GHA-ADM1_simplified.geojson";
+const GEOJSON_URL = "/ghana-adm1.geojson";
 
 type RegionSummary = {
   region: string;
