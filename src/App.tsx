@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
+import ChoroplethMap from "./components/ChoroplethMap";
 
 const API_BASE = "https://epexegetic-doris-quiescently.ngrok-free.dev";
 
@@ -34,7 +35,7 @@ export default function App() {
       .catch(() => setRegions([]));
   }, [capability]);
 
-  function loadFacilities(region: string) {
+  const loadFacilities = useCallback((region: string) => {
     setSelectedRegion(region);
     fetch(`${API_BASE}/facilities?capability=${capability}&region=${encodeURIComponent(region)}&limit=200`, {
       headers: { "ngrok-skip-browser-warning": "1" },
@@ -42,7 +43,7 @@ export default function App() {
       .then((r) => r.json())
       .then((d) => setFacilities(d.items || []))
       .catch(() => setFacilities([]));
-  }
+  }, [capability]);
 
   return (
     <div className="p-6 max-w-6xl mx-auto">
@@ -57,6 +58,15 @@ export default function App() {
         </select>
       </div>
 
+      {/* Choropleth Map */}
+      <div className="mt-6">
+        <ChoroplethMap
+          regions={regions}
+          onRegionClick={loadFacilities}
+          selectedRegion={selectedRegion}
+        />
+      </div>
+
       <div className="mt-6 grid grid-cols-3 gap-4">
         <div>
           <h2 className="font-semibold mb-2">Regions</h2>
@@ -64,7 +74,9 @@ export default function App() {
             <button
               key={r.region}
               onClick={() => loadFacilities(r.region)}
-              className="w-full text-left border rounded p-3 mb-2 hover:bg-gray-50"
+              className={`w-full text-left border rounded p-3 mb-2 hover:bg-gray-50 ${
+                selectedRegion === r.region ? "ring-2 ring-primary" : ""
+              }`}
             >
               <div className="font-medium">{r.region}</div>
               <div className="text-sm">Status: {r.status}</div>
