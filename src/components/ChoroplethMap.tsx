@@ -197,21 +197,21 @@ export default function ChoroplethMap({
         geoJsonLayerRef.current = L.geoJSON(geojson, {
           style: (feature) => {
             if (!feature?.properties) {
-              return { fillColor: "#94a3b8", weight: 1, opacity: 1, color: "#64748b", fillOpacity: 0.5 };
+              return { fillColor: "transparent", weight: 1, opacity: 1, color: "#94a3b8", fillOpacity: 0 };
             }
 
             const featureName = getFeatureRegionName(feature.properties);
             const normalizedName = normalizeRegionName(featureName);
-            const regionData = aggregatedLookup.get(normalizedName);
 
             const isSelected = selectedRegion && normalizeRegionName(selectedRegion) === normalizedName;
 
+            // Transparent fill, only show borders
             return {
-              fillColor: regionData ? STATUS_COLORS[regionData.status] : "#94a3b8",
-              weight: isSelected ? 3 : 1,
+              fillColor: "transparent",
+              weight: isSelected ? 2 : 1,
               opacity: 1,
-              color: isSelected ? "#1e293b" : "#64748b",
-              fillOpacity: isSelected ? 0.8 : 0.6,
+              color: isSelected ? "#1e293b" : "#94a3b8",
+              fillOpacity: 0,
             };
           },
           onEachFeature: (feature, layer) => {

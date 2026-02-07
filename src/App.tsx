@@ -27,13 +27,17 @@ export default function App() {
   const [capability, setCapability] = useState("c_section");
   const [regions, setRegions] = useState<RegionSummary[]>([]);
   const [selectedRegion, setSelectedRegion] = useState<string | null>(null);
-  const [facilities, setFacilities] = useState<Facility[]>([]);
+  const [allFacilities, setAllFacilities] = useState<Facility[]>([]);
+  const [selectedFacilities, setSelectedFacilities] = useState<Facility[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Load regions and all facilities
   useEffect(() => {
     setLoading(true);
     setError(null);
+    
+    // Fetch regions
     fetch(`${API_BASE}/regions/summary?capability=${capability}`, {
       headers: { "ngrok-skip-browser-warning": "1" },
     })
@@ -42,37 +46,52 @@ export default function App() {
         return r.json();
       })
       .then((d) => {
-        setRegions(d.items || []);
+        const regionItems = d.items || [];
+        setRegions(regionItems);
+        
+        // Fetch facilities for all regions
+        const facilityPromises = regionItems
+          .filter((r: RegionSummary) => r.region !== "Unknown")
+          .map((r: RegionSummary) =>
+            fetch(`${API_BASE}/facilities?capability=${capability}&region=${encodeURIComponent(r.region)}&limit=200`, {
+              headers: { "ngrok-skip-browser-warning": "1" },
+            })
+              .then((res) => res.json())
+              .then((data) => {
+                const items = data.items || [];
+                return items.map((f: Facility) => {
+                  const coords = findFacilityCoords(f.name, r.region);
+                  return coords ? { ...f, lat: coords.lat, lng: coords.lng } : f;
+                });
+              })
+              .catch(() => [])
+          );
+        
+        return Promise.all(facilityPromises);
+      })
+      .then((allFacilityArrays) => {
+        const combined = allFacilityArrays.flat();
+        setAllFacilities(combined);
         setLoading(false);
       })
       .catch((err) => {
-        console.error("Failed to fetch regions:", err);
+        console.error("Failed to fetch data:", err);
         setError("Could not connect to API. The backend may be offline.");
         setRegions([]);
+        setAllFacilities([]);
         setLoading(false);
       });
   }, [capability]);
 
-  const loadFacilities = useCallback(
-    (region: string) => {
-      setSelectedRegion(region);
-      fetch(`${API_BASE}/facilities?capability=${capability}&region=${encodeURIComponent(region)}&limit=200`, {
-        headers: { "ngrok-skip-browser-warning": "1" },
-      })
-        .then((r) => r.json())
-        .then((d) => {
-          const items = d.items || [];
-          // Add coordinates to facilities
-          const facilitiesWithCoords = items.map((f: Facility) => {
-            const coords = findFacilityCoords(f.name, region);
-            return coords ? { ...f, lat: coords.lat, lng: coords.lng } : f;
-          });
-          setFacilities(facilitiesWithCoords);
-        })
-        .catch(() => setFacilities([]));
-    },
-    [capability],
-  );
+  const handleRegionClick = useCallback((region: string) => {
+    setSelectedRegion(region);
+    // Filter facilities for the selected region
+    const filtered = allFacilities.filter((f) => {
+      // Check if facility has a region field or match by coordinates
+      return (f as Facility & { region?: string }).region === region;
+    });
+    setSelectedFacilities(filtered);
+  }, [allFacilities]);
 
   return (
     <div className="p-6 max-w-6xl mx-auto">
@@ -89,7 +108,7 @@ export default function App() {
 
       {/* Choropleth Map */}
       <div className="mt-6">
-        <ChoroplethMap regions={regions} facilities={facilities} onRegionClick={loadFacilities} selectedRegion={selectedRegion} />
+        <ChoroplethMap regions={regions} facilities={allFacilities} onRegionClick={handleRegionClick} selectedRegion={selectedRegion} />
       </div>
 
       <div className="mt-6 grid grid-cols-3 gap-4">
@@ -103,7 +122,7 @@ export default function App() {
           {regions.map((r) => (
             <button
               key={r.region}
-              onClick={() => loadFacilities(r.region)}
+              onClick={() => handleRegionClick(r.region)}
               className={`w-full text-left border rounded p-3 mb-2 hover:bg-accent ${
                 selectedRegion === r.region ? "ring-2 ring-primary" : ""
               }`}
@@ -119,7 +138,7 @@ export default function App() {
             {selectedRegion ? `Facilities — ${selectedRegion}` : "Select a region"}
           </h2>
 
-          {facilities.map((f) => (
+          {selectedFacilities.map((f) => (
             <div key={f.facility_id} className="border rounded p-3 mb-2">
               <div className="font-semibold">{f.name}</div>
               <div className="text-sm">
@@ -127,13 +146,13 @@ export default function App() {
               </div>
 
               {f.assessment.flags.map((fl, i) => (
-                <div key={i} className="text-sm text-red-600">
+                <div key={i} className="text-sm text-destructive">
                   {fl.message}
                 </div>
               ))}
 
               {f.assessment.missing_required.length > 0 && (
-                <div className="text-xs text-gray-500 mt-1">
+                <div className="text-xs text-muted-foreground mt-1">
                   Missing signals: {f.assessment.missing_required.join(", ")}
                 </div>
               )}
