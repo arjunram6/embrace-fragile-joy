@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import ChoroplethMap from "./components/ChoroplethMap";
+import FacilityCard from "./components/FacilityCard";
 import { findFacilityCoords } from "./lib/ghana-city-coords";
 
 const API_BASE = "https://epexegetic-doris-quiescently.ngrok-free.dev";
@@ -172,39 +173,39 @@ export default function App() {
         </div>
 
         <div className="col-span-2">
-          <h2 className="font-semibold mb-2">
-            {selectedRegion ? `Facilities — ${selectedRegion}` : "Select a region"}
-          </h2>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="font-semibold">
+              {selectedRegion ? `Facilities in ${selectedRegion}` : "Select a region"}
+            </h2>
+            {selectedFacilities.length > 0 && (
+              <span className="text-sm text-muted-foreground">
+                {selectedFacilities.length} facilities
+              </span>
+            )}
+          </div>
 
-          {selectedFacilities.map((f) => (
-            <button
-              key={f.facility_id}
-              onClick={() => handleFacilityClick(f)}
-              className={`w-full text-left border rounded p-3 mb-2 hover:bg-accent transition-colors ${
-                selectedFacilityId === f.facility_id ? "ring-2 ring-primary bg-accent" : ""
-              }`}
-            >
-              <div className="font-semibold">{f.name}</div>
-              <div className="text-sm">
-                Readiness: <span className={
-                  f.assessment.readiness === "ready" ? "text-green-600 font-medium" :
-                  f.assessment.readiness === "fragile" ? "text-amber-600 font-medium" : "text-red-600 font-medium"
-                }>{f.assessment.readiness}</span> · Confidence: {Math.round(f.assessment.confidence * 100)}%
-              </div>
+          {selectedFacilities.length === 0 && selectedRegion && (
+            <div className="text-center py-8 text-muted-foreground">
+              <p>No facilities found in this region.</p>
+            </div>
+          )}
 
-              {f.assessment.flags.map((fl, i) => (
-                <div key={i} className="text-sm text-destructive">
-                  {fl.message}
-                </div>
-              ))}
+          {!selectedRegion && (
+            <div className="text-center py-8 text-muted-foreground border-2 border-dashed rounded-lg">
+              <p>Click on a region to view its facilities</p>
+            </div>
+          )}
 
-              {f.assessment.missing_required.length > 0 && (
-                <div className="text-xs text-muted-foreground mt-1">
-                  Missing signals: {f.assessment.missing_required.join(", ")}
-                </div>
-              )}
-            </button>
-          ))}
+          <div className="max-h-[500px] overflow-y-auto pr-1">
+            {selectedFacilities.map((f) => (
+              <FacilityCard
+                key={f.facility_id}
+                facility={f}
+                isSelected={selectedFacilityId === f.facility_id}
+                onClick={() => handleFacilityClick(f)}
+              />
+            ))}
+          </div>
         </div>
       </div>
     </div>
