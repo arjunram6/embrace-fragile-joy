@@ -1,10 +1,38 @@
-import { CheckCircle, AlertTriangle, XCircle, ChevronRight } from "lucide-react";
+import { CheckCircle, AlertTriangle, XCircle, ChevronRight, Info, Phone, Mail, Globe, MapPin, Building, FileText } from "lucide-react";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 type Facility = {
   facility_id: string;
   name: string;
   lat?: number;
   lng?: number;
+  region?: string;
+  capability?: string[];
+  phone_numbers?: string[];
+  email?: string;
+  websites?: string[];
+  officialWebsite?: string;
+  address_line1?: string;
+  address_line2?: string;
+  address_line3?: string;
+  address_city?: string;
+  address_stateOrRegion?: string;
+  address_zipOrPostcode?: string;
+  address_country?: string;
+  address_countryCode?: string;
+  countries?: string[];
+  missionStatement?: string;
+  missionStatementLink?: string;
+  organizationDescription?: string;
+  facilityTypeId?: string;
+  operatorTypeId?: string;
+  affiliationTypeIds?: string[];
+  description?: string;
   assessment: {
     readiness: "ready" | "fragile" | "absent";
     confidence: number;
@@ -49,24 +77,105 @@ const statusConfig = {
   },
 };
 
+function InfoRow({ icon: Icon, label, value }: { icon: React.ElementType; label: string; value?: string | string[] | null }) {
+  if (!value || (Array.isArray(value) && value.length === 0)) return null;
+  
+  const displayValue = Array.isArray(value) ? value.join(", ") : value;
+  
+  return (
+    <div className="flex items-start gap-2 py-2 border-b border-border last:border-0">
+      <Icon className="w-4 h-4 text-muted-foreground flex-shrink-0 mt-0.5" />
+      <div className="min-w-0 flex-1">
+        <div className="text-xs text-muted-foreground">{label}</div>
+        <div className="text-sm break-words">{displayValue}</div>
+      </div>
+    </div>
+  );
+}
+
+function FacilityInfoPopover({ facility }: { facility: Facility }) {
+  const address = [
+    facility.address_line1,
+    facility.address_line2,
+    facility.address_line3,
+    facility.address_city,
+    facility.address_stateOrRegion,
+    facility.address_zipOrPostcode,
+    facility.address_country,
+  ].filter(Boolean).join(", ");
+
+  const hasInfo = facility.capability || facility.phone_numbers || facility.email || 
+    facility.websites || facility.officialWebsite || address || 
+    facility.description || facility.organizationDescription || 
+    facility.missionStatement || facility.facilityTypeId;
+
+  if (!hasInfo) {
+    return (
+      <div className="p-2 rounded-full hover:bg-muted transition-colors opacity-30 cursor-not-allowed">
+        <Info className="w-4 h-4 text-muted-foreground" />
+      </div>
+    );
+  }
+
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <button 
+          className="p-2 rounded-full hover:bg-muted transition-colors"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <Info className="w-4 h-4 text-primary" />
+        </button>
+      </PopoverTrigger>
+      <PopoverContent className="w-80 p-0" align="end" onClick={(e) => e.stopPropagation()}>
+        <div className="p-3 border-b bg-muted/50">
+          <h4 className="font-semibold text-sm">{facility.name}</h4>
+          {facility.facilityTypeId && (
+            <span className="text-xs text-muted-foreground capitalize">{facility.facilityTypeId}</span>
+          )}
+        </div>
+        <ScrollArea className="h-[300px]">
+          <div className="p-3 space-y-0">
+            <InfoRow icon={Building} label="Capabilities" value={facility.capability} />
+            <InfoRow icon={Phone} label="Phone" value={facility.phone_numbers} />
+            <InfoRow icon={Mail} label="Email" value={facility.email} />
+            <InfoRow icon={Globe} label="Website" value={facility.officialWebsite || (facility.websites?.[0])} />
+            <InfoRow icon={MapPin} label="Address" value={address || undefined} />
+            <InfoRow icon={FileText} label="Description" value={facility.description || facility.organizationDescription} />
+            {facility.missionStatement && (
+              <InfoRow icon={FileText} label="Mission" value={facility.missionStatement} />
+            )}
+            {facility.operatorTypeId && (
+              <InfoRow icon={Building} label="Operator Type" value={facility.operatorTypeId} />
+            )}
+            {facility.affiliationTypeIds && facility.affiliationTypeIds.length > 0 && (
+              <InfoRow icon={Building} label="Affiliations" value={facility.affiliationTypeIds} />
+            )}
+          </div>
+        </ScrollArea>
+      </PopoverContent>
+    </Popover>
+  );
+}
+
 export default function FacilityCard({ facility, isSelected, onClick }: FacilityCardProps) {
   const status = statusConfig[facility.assessment.readiness];
   const StatusIcon = status.icon;
   const confidence = Math.round(facility.assessment.confidence * 100);
 
   return (
-    <button
+    <div
       onClick={onClick}
       className={`
         w-full text-left rounded-lg border-l-4 ${status.borderColor}
-        bg-card hover:bg-accent/50 transition-all duration-200
+        bg-card hover:bg-accent/50 transition-all duration-200 cursor-pointer
         ${isSelected ? "ring-2 ring-primary shadow-md" : "shadow-sm hover:shadow"}
         mb-3 overflow-hidden
       `}
     >
       <div className="p-4">
         {/* Header */}
-        <div className="flex items-start justify-between gap-3">
+        <div className="flex items-start justify-between gap-2">
           <div className="flex items-start gap-3 flex-1 min-w-0">
             <div className={`p-2 rounded-full ${status.bgColor} flex-shrink-0`}>
               <StatusIcon className={`w-4 h-4 ${status.iconColor}`} />
@@ -85,7 +194,10 @@ export default function FacilityCard({ facility, isSelected, onClick }: Facility
               </div>
             </div>
           </div>
-          <ChevronRight className={`w-4 h-4 text-muted-foreground flex-shrink-0 transition-transform ${isSelected ? "rotate-90" : ""}`} />
+          <div className="flex items-center gap-1 flex-shrink-0">
+            <FacilityInfoPopover facility={facility} />
+            <ChevronRight className={`w-4 h-4 text-muted-foreground transition-transform ${isSelected ? "rotate-90" : ""}`} />
+          </div>
         </div>
 
         {/* Flags/Warnings */}
@@ -118,6 +230,6 @@ export default function FacilityCard({ facility, isSelected, onClick }: Facility
           </div>
         )}
       </div>
-    </button>
+    </div>
   );
 }

@@ -16,6 +16,28 @@ type Facility = {
   name: string;
   lat?: number;
   lng?: number;
+  region?: string;
+  capability?: string[];
+  phone_numbers?: string[];
+  email?: string;
+  websites?: string[];
+  officialWebsite?: string;
+  address_line1?: string;
+  address_line2?: string;
+  address_line3?: string;
+  address_city?: string;
+  address_stateOrRegion?: string;
+  address_zipOrPostcode?: string;
+  address_country?: string;
+  address_countryCode?: string;
+  countries?: string[];
+  missionStatement?: string;
+  missionStatementLink?: string;
+  organizationDescription?: string;
+  facilityTypeId?: string;
+  operatorTypeId?: string;
+  affiliationTypeIds?: string[];
+  description?: string;
   assessment: {
     readiness: "ready" | "fragile" | "absent";
     confidence: number;
