@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-const API_BASE = "https://epexegetic-doris-quiescently.ngrok-free.de";
+const API_BASE = https://epexegetic-doris-quiescently.ngrok-free.dev;
 
 type RegionSummary = {
   region: string;
