@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import ChoroplethMap from "./components/ChoroplethMap";
+import { findFacilityCoords } from "./lib/ghana-city-coords";
 
 const API_BASE = "https://epexegetic-doris-quiescently.ngrok-free.dev";
 
@@ -59,7 +60,15 @@ export default function App() {
         headers: { "ngrok-skip-browser-warning": "1" },
       })
         .then((r) => r.json())
-        .then((d) => setFacilities(d.items || []))
+        .then((d) => {
+          const items = d.items || [];
+          // Add coordinates to facilities
+          const facilitiesWithCoords = items.map((f: Facility) => {
+            const coords = findFacilityCoords(f.name, region);
+            return coords ? { ...f, lat: coords.lat, lng: coords.lng } : f;
+          });
+          setFacilities(facilitiesWithCoords);
+        })
         .catch(() => setFacilities([]));
     },
     [capability],
