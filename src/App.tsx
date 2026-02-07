@@ -1,27 +1,104 @@
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Index from "./pages/Index";
-import NotFound from "./pages/NotFound";
+import { useEffect, useState } from "react";
 
-const queryClient = new QueryClient();
+const API_BASE = "https://epexegetic-doris-quiescently.ngrok-free.dev";
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+type RegionSummary = {
+  region: string;
+  status: "desert" | "fragile" | "resilient";
+  counts: { ready: number; fragile: number; absent: number; total: number };
+};
 
-export default App;
+type Facility = {
+  facility_id: string;
+  name: string;
+  assessment: {
+    readiness: "ready" | "fragile" | "absent";
+    confidence: number;
+    missing_required: string[];
+    flags: { type: string; severity: string; message: string }[];
+  };
+};
+
+export default function App() {
+  const [capability, setCapability] = useState("c_section");
+  const [regions, setRegions] = useState<RegionSummary[]>([]);
+  const [selectedRegion, setSelectedRegion] = useState<string | null>(null);
+  const [facilities, setFacilities] = useState<Facility[]>([]);
+
+  useEffect(() => {
+    fetch(`${API_BASE}/regions/summary?capability=${capability}`, {
+      headers: { "ngrok-skip-browser-warning": "1" },
+    })
+      .then((r) => r.json())
+      .then((d) => setRegions(d.items || []))
+      .catch(() => setRegions([]));
+  }, [capability]);
+
+  function loadFacilities(region: string) {
+    setSelectedRegion(region);
+    fetch(`${API_BASE}/facilities?capability=${capability}&region=${encodeURIComponent(region)}&limit=200`, {
+      headers: { "ngrok-skip-browser-warning": "1" },
+    })
+      .then((r) => r.json())
+      .then((d) => setFacilities(d.items || []))
+      .catch(() => setFacilities([]));
+  }
+
+  return (
+    <div className="p-6 max-w-6xl mx-auto">
+      <h1 className="text-2xl font-bold">Capability Readiness & Fragility</h1>
+      <p className="text-sm text-gray-600 mt-1">AI-derived readiness signals from unstructured facility data</p>
+
+      <div className="mt-4">
+        <select className="border rounded px-3 py-2" value={capability} onChange={(e) => setCapability(e.target.value)}>
+          <option value="c_section">C-section</option>
+          <option value="emergency_surgery">Emergency surgery</option>
+          <option value="ultrasound">Ultrasound</option>
+        </select>
+      </div>
+
+      <div className="mt-6 grid grid-cols-3 gap-4">
+        <div>
+          <h2 className="font-semibold mb-2">Regions</h2>
+          {regions.map((r) => (
+            <button
+              key={r.region}
+              onClick={() => loadFacilities(r.region)}
+              className="w-full text-left border rounded p-3 mb-2 hover:bg-gray-50"
+            >
+              <div className="font-medium">{r.region}</div>
+              <div className="text-sm">Status: {r.status}</div>
+            </button>
+          ))}
+        </div>
+
+        <div className="col-span-2">
+          <h2 className="font-semibold mb-2">
+            {selectedRegion ? `Facilities — ${selectedRegion}` : "Select a region"}
+          </h2>
+
+          {facilities.map((f) => (
+            <div key={f.facility_id} className="border rounded p-3 mb-2">
+              <div className="font-semibold">{f.name}</div>
+              <div className="text-sm">
+                Readiness: <b>{f.assessment.readiness}</b> · Confidence: {f.assessment.confidence}
+              </div>
+
+              {f.assessment.flags.map((fl, i) => (
+                <div key={i} className="text-sm text-red-600">
+                  {fl.message}
+                </div>
+              ))}
+
+              {f.assessment.missing_required.length > 0 && (
+                <div className="text-xs text-gray-500 mt-1">
+                  Missing signals: {f.assessment.missing_required.join(", ")}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
