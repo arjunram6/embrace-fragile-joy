@@ -38,6 +38,7 @@ const STATUS_COLORS: Record<string, string> = {
 function getFeatureRegionName(properties: Record<string, unknown>): string {
   const p = properties;
   return (
+    (p.region as string) ||
     (p.region_name as string) ||
     (p.name as string) ||
     (p.name_en as string) ||
@@ -50,7 +51,7 @@ function normalizeRegionName(name: string): string {
   return name.toLowerCase().replace(/[^a-z]/g, "");
 }
 
-// Maps API region names to GeoJSON region_name values
+// Maps API region names to GeoJSON region values (all 16 regions)
 const REGION_ALIASES: Record<string, string> = {
   // Greater Accra variations
   "greateraccra": "greateraccra",
@@ -69,31 +70,53 @@ const REGION_ALIASES: Record<string, string> = {
   "ahafoanosouheast": "ashanti",
   // Western variations
   "western": "western",
-  "westernnorth": "western",
   "takoradi": "western",
+  "sekonditakoradi": "western",
+  // Western North (separate region)
+  "westernnorth": "westernnorth",
+  "sefwiwiawso": "westernnorth",
   // Bono/Brong Ahafo variations
   "bono": "bono",
-  "bonoeast": "bonoeast",
-  "ahafo": "ahafo",
+  "sunyani": "bono",
   "brongahafo": "bono",
-  "techimanmunicipal": "bono",
   "dormaaeast": "bono",
+  // Bono East (separate region)
+  "bonoeast": "bonoeast",
+  "techimanmunicipal": "bonoeast",
+  "techiman": "bonoeast",
+  // Ahafo (separate region)
+  "ahafo": "ahafo",
+  "ahafogoaso": "ahafo",
+  "goaso": "ahafo",
   // Volta/Oti variations
   "volta": "volta",
+  "ho": "volta",
+  // Oti (separate region)
   "oti": "oti",
+  "dambai": "oti",
   // Northern variations
   "northern": "northern",
+  "tamale": "northern",
+  // Savannah (separate region)
   "savannah": "savannah",
+  "damongo": "savannah",
+  "damango": "savannah",
+  // North East (separate region)
   "northeast": "northeast",
+  "nalerigu": "northeast",
   // Upper regions
   "uppereast": "uppereast",
+  "bolgatanga": "uppereast",
   "upperwest": "upperwest",
+  "wa": "upperwest",
   "sissalawestdistrict": "upperwest",
   // Central region
   "central": "central",
+  "capecoast": "central",
   "centralghana": "central",
   // Eastern region
   "eastern": "eastern",
+  "koforidua": "eastern",
   // Generic/unknown
   "ghana": "greateraccra",
   "sh": "ashanti",
