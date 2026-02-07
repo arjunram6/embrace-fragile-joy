@@ -25,14 +25,29 @@ export default function App() {
   const [regions, setRegions] = useState<RegionSummary[]>([]);
   const [selectedRegion, setSelectedRegion] = useState<string | null>(null);
   const [facilities, setFacilities] = useState<Facility[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    setLoading(true);
+    setError(null);
     fetch(`${API_BASE}/regions/summary?capability=${capability}`, {
       headers: { "ngrok-skip-browser-warning": "1" },
     })
-      .then((r) => r.json())
-      .then((d) => setRegions(d.items || []))
-      .catch(() => setRegions([]));
+      .then((r) => {
+        if (!r.ok) throw new Error(`API returned ${r.status}`);
+        return r.json();
+      })
+      .then((d) => {
+        setRegions(d.items || []);
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error("Failed to fetch regions:", err);
+        setError("Could not connect to API. The backend may be offline.");
+        setRegions([]);
+        setLoading(false);
+      });
   }, [capability]);
 
   const loadFacilities = useCallback((region: string) => {
@@ -70,11 +85,16 @@ export default function App() {
       <div className="mt-6 grid grid-cols-3 gap-4">
         <div>
           <h2 className="font-semibold mb-2">Regions</h2>
+          {loading && <p className="text-sm text-muted-foreground">Loading regions...</p>}
+          {error && <p className="text-sm text-destructive">{error}</p>}
+          {!loading && !error && regions.length === 0 && (
+            <p className="text-sm text-muted-foreground">No regions found.</p>
+          )}
           {regions.map((r) => (
             <button
               key={r.region}
               onClick={() => loadFacilities(r.region)}
-              className={`w-full text-left border rounded p-3 mb-2 hover:bg-gray-50 ${
+              className={`w-full text-left border rounded p-3 mb-2 hover:bg-accent ${
                 selectedRegion === r.region ? "ring-2 ring-primary" : ""
               }`}
             >
