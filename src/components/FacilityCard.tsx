@@ -104,57 +104,68 @@ function FacilityInfoPopover({ facility }: { facility: Facility }) {
     facility.address_country,
   ].filter(Boolean).join(", ");
 
-  const hasInfo = facility.capability || facility.phone_numbers || facility.email || 
+  const hasDetailedInfo = facility.capability || facility.phone_numbers || facility.email || 
     facility.websites || facility.officialWebsite || address || 
     facility.description || facility.organizationDescription || 
     facility.missionStatement || facility.facilityTypeId;
 
-  if (!hasInfo) {
-    return (
-      <div className="p-2 rounded-full hover:bg-muted transition-colors opacity-30 cursor-not-allowed">
-        <Info className="w-4 h-4 text-muted-foreground" />
-      </div>
-    );
-  }
-
   return (
-    <Popover>
-      <PopoverTrigger asChild>
-        <button 
-          className="p-2 rounded-full hover:bg-muted transition-colors"
-          onPointerDown={(e) => e.stopPropagation()}
-        >
-          <Info className="w-4 h-4 text-primary" />
-        </button>
-      </PopoverTrigger>
-      <PopoverContent className="w-80 p-0" align="end" onClick={(e) => e.stopPropagation()}>
-        <div className="p-3 border-b bg-muted/50">
-          <h4 className="font-semibold text-sm">{facility.name}</h4>
-          {facility.facilityTypeId && (
-            <span className="text-xs text-muted-foreground capitalize">{facility.facilityTypeId}</span>
-          )}
-        </div>
-        <ScrollArea className="h-[300px]">
-          <div className="p-3 space-y-0">
-            <InfoRow icon={Building} label="Capabilities" value={facility.capability} />
-            <InfoRow icon={Phone} label="Phone" value={facility.phone_numbers} />
-            <InfoRow icon={Mail} label="Email" value={facility.email} />
-            <InfoRow icon={Globe} label="Website" value={facility.officialWebsite || (facility.websites?.[0])} />
-            <InfoRow icon={MapPin} label="Address" value={address || undefined} />
-            <InfoRow icon={FileText} label="Description" value={facility.description || facility.organizationDescription} />
-            {facility.missionStatement && (
-              <InfoRow icon={FileText} label="Mission" value={facility.missionStatement} />
+    <div onClick={(e) => e.stopPropagation()} onPointerDown={(e) => e.stopPropagation()}>
+      <Popover>
+        <PopoverTrigger asChild>
+          <button 
+            className="p-2 rounded-full hover:bg-muted transition-colors"
+            type="button"
+          >
+            <Info className="w-4 h-4 text-primary" />
+          </button>
+        </PopoverTrigger>
+        <PopoverContent className="w-80 p-0" align="end">
+          <div className="p-3 border-b bg-muted/50">
+            <h4 className="font-semibold text-sm">{facility.name}</h4>
+            {facility.facilityTypeId && (
+              <span className="text-xs text-muted-foreground capitalize">{facility.facilityTypeId}</span>
             )}
-            {facility.operatorTypeId && (
-              <InfoRow icon={Building} label="Operator Type" value={facility.operatorTypeId} />
-            )}
-            {facility.affiliationTypeIds && facility.affiliationTypeIds.length > 0 && (
-              <InfoRow icon={Building} label="Affiliations" value={facility.affiliationTypeIds} />
+            {facility.region && !facility.facilityTypeId && (
+              <span className="text-xs text-muted-foreground">{facility.region}</span>
             )}
           </div>
-        </ScrollArea>
-      </PopoverContent>
-    </Popover>
+          <ScrollArea className="h-[250px]">
+            <div className="p-3 space-y-0">
+              {/* Assessment info - always show */}
+              <InfoRow icon={Building} label="Readiness" value={facility.assessment.readiness} />
+              {facility.assessment.confidence > 0 && (
+                <InfoRow icon={Building} label="Confidence" value={`${Math.round(facility.assessment.confidence * 100)}%`} />
+              )}
+              {facility.assessment.missing_required.length > 0 && (
+                <InfoRow icon={AlertTriangle} label="Missing" value={facility.assessment.missing_required} />
+              )}
+              
+              {/* Detailed info - show if available */}
+              {hasDetailedInfo && (
+                <>
+                  <InfoRow icon={Building} label="Capabilities" value={facility.capability} />
+                  <InfoRow icon={Phone} label="Phone" value={facility.phone_numbers} />
+                  <InfoRow icon={Mail} label="Email" value={facility.email} />
+                  <InfoRow icon={Globe} label="Website" value={facility.officialWebsite || (facility.websites?.[0])} />
+                  <InfoRow icon={MapPin} label="Address" value={address || undefined} />
+                  <InfoRow icon={FileText} label="Description" value={facility.description || facility.organizationDescription} />
+                  {facility.missionStatement && (
+                    <InfoRow icon={FileText} label="Mission" value={facility.missionStatement} />
+                  )}
+                  {facility.operatorTypeId && (
+                    <InfoRow icon={Building} label="Operator Type" value={facility.operatorTypeId} />
+                  )}
+                  {facility.affiliationTypeIds && facility.affiliationTypeIds.length > 0 && (
+                    <InfoRow icon={Building} label="Affiliations" value={facility.affiliationTypeIds} />
+                  )}
+                </>
+              )}
+            </div>
+          </ScrollArea>
+        </PopoverContent>
+      </Popover>
+    </div>
   );
 }
 
