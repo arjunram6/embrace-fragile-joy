@@ -34,6 +34,55 @@ function normalizeRegionName(name: string): string {
   return name.toLowerCase().replace(/[^a-z]/g, "");
 }
 
+// Maps API region names to GeoJSON region_name values
+const REGION_ALIASES: Record<string, string> = {
+  // Greater Accra variations
+  "greateraccra": "greateraccra",
+  "accranorth": "greateraccra",
+  "accraeast": "greateraccra",
+  "gaeastmunicipality": "greateraccra",
+  "gaeastmunicipalitygreateraccra": "greateraccra",
+  "ledzokukukrowor": "greateraccra",
+  "shaiosudokudistrictgreateraccra": "greateraccra",
+  "temawestmunicipal": "greateraccra",
+  "eastlegon": "greateraccra",
+  // Ashanti variations  
+  "ashanti": "ashanti",
+  "asokwakumasi": "ashanti",
+  "ejisumunicipal": "ashanti",
+  "ahafoanosouheast": "ashanti",
+  // Western variations
+  "western": "western",
+  "westernnorth": "western",
+  "takoradi": "western",
+  // Bono/Brong Ahafo variations
+  "bono": "bono",
+  "bonoeast": "bonoeast",
+  "ahafo": "ahafo",
+  "brongahafo": "bono",
+  "techimanmunicipal": "bono",
+  "dormaaeast": "bono",
+  // Volta/Oti variations
+  "volta": "volta",
+  "oti": "oti",
+  // Northern variations
+  "northern": "northern",
+  "savannah": "savannah",
+  "northeast": "northeast",
+  // Upper regions
+  "uppereast": "uppereast",
+  "upperwest": "upperwest",
+  "sissalawestdistrict": "upperwest",
+  // Central region
+  "central": "central",
+  "centralghana": "central",
+  // Eastern region
+  "eastern": "eastern",
+  // Generic/unknown
+  "ghana": "greateraccra",
+  "sh": "ashanti",
+};
+
 export default function ChoroplethMap({
   regions,
   onRegionClick,
@@ -83,7 +132,44 @@ export default function ChoroplethMap({
       .then((geojson) => {
         const regionLookup = new Map<string, RegionSummary>();
         regions.forEach((r) => {
-          regionLookup.set(normalizeRegionName(r.region), r);
+          const normalized = normalizeRegionName(r.region);
+          // Store under both the original normalized name and any alias
+          regionLookup.set(normalized, r);
+          const alias = REGION_ALIASES[normalized];
+          if (alias && !regionLookup.has(alias)) {
+            regionLookup.set(alias, r);
+          }
+        });
+
+        // Aggregate counts for regions that map to the same GeoJSON region
+        const aggregatedLookup = new Map<string, RegionSummary>();
+        regions.forEach((r) => {
+          const normalized = normalizeRegionName(r.region);
+          const targetRegion = REGION_ALIASES[normalized] || normalized;
+          
+          if (aggregatedLookup.has(targetRegion)) {
+            const existing = aggregatedLookup.get(targetRegion)!;
+            existing.counts.ready += r.counts.ready;
+            existing.counts.fragile += r.counts.fragile;
+            existing.counts.absent += r.counts.absent;
+            existing.counts.total += r.counts.total;
+            // Update status based on aggregated counts
+            const readyRatio = existing.counts.ready / existing.counts.total;
+            const fragileRatio = existing.counts.fragile / existing.counts.total;
+            if (readyRatio > 0.5) {
+              existing.status = "resilient";
+            } else if (fragileRatio > 0.3 || readyRatio > 0.1) {
+              existing.status = "fragile";
+            } else {
+              existing.status = "desert";
+            }
+          } else {
+            aggregatedLookup.set(targetRegion, {
+              region: r.region,
+              status: r.status,
+              counts: { ...r.counts },
+            });
+          }
         });
 
         geoJsonLayerRef.current = L.geoJSON(geojson, {
@@ -94,7 +180,7 @@ export default function ChoroplethMap({
 
             const featureName = getFeatureRegionName(feature.properties);
             const normalizedName = normalizeRegionName(featureName);
-            const regionData = regionLookup.get(normalizedName);
+            const regionData = aggregatedLookup.get(normalizedName);
 
             const isSelected = selectedRegion && normalizeRegionName(selectedRegion) === normalizedName;
 
@@ -111,7 +197,7 @@ export default function ChoroplethMap({
 
             const featureName = getFeatureRegionName(feature.properties);
             const normalizedName = normalizeRegionName(featureName);
-            const regionData = regionLookup.get(normalizedName);
+            const regionData = aggregatedLookup.get(normalizedName);
 
             // Tooltip
             const tooltipContent = regionData
@@ -120,10 +206,16 @@ export default function ChoroplethMap({
 
             layer.bindTooltip(tooltipContent, { sticky: true });
 
-            // Click handler
+            // Click handler - find all matching API regions and use the first one
             layer.on("click", () => {
-              if (regionData) {
-                onRegionClick(regionData.region);
+              // Find the first API region that maps to this GeoJSON region
+              const matchingRegion = regions.find((r) => {
+                const normalized = normalizeRegionName(r.region);
+                const alias = REGION_ALIASES[normalized] || normalized;
+                return alias === normalizedName || normalized === normalizedName;
+              });
+              if (matchingRegion) {
+                onRegionClick(matchingRegion.region);
               }
             });
           },
