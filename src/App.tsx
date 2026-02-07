@@ -29,6 +29,7 @@ export default function App() {
   const [selectedRegion, setSelectedRegion] = useState<string | null>(null);
   const [allFacilities, setAllFacilities] = useState<Facility[]>([]);
   const [selectedFacilities, setSelectedFacilities] = useState<Facility[]>([]);
+  const [selectedFacilityId, setSelectedFacilityId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -86,13 +87,26 @@ export default function App() {
 
   const handleRegionClick = useCallback((region: string) => {
     setSelectedRegion(region);
+    setSelectedFacilityId(null);
     // Filter facilities for the selected region
     const filtered = allFacilities.filter((f) => {
-      // Check if facility has a region field or match by coordinates
       return (f as Facility & { region?: string }).region === region;
     });
     setSelectedFacilities(filtered);
   }, [allFacilities]);
+
+  const handleFacilityClick = useCallback((facility: Facility) => {
+    setSelectedFacilityId(facility.facility_id);
+    // Also select the region if not already selected
+    const facilityRegion = (facility as Facility & { region?: string }).region;
+    if (facilityRegion && facilityRegion !== selectedRegion) {
+      setSelectedRegion(facilityRegion);
+      const filtered = allFacilities.filter((f) => {
+        return (f as Facility & { region?: string }).region === facilityRegion;
+      });
+      setSelectedFacilities(filtered);
+    }
+  }, [allFacilities, selectedRegion]);
 
   return (
     <div className="p-6 max-w-6xl mx-auto">
@@ -109,7 +123,14 @@ export default function App() {
 
       {/* Choropleth Map */}
       <div className="mt-6">
-        <ChoroplethMap regions={regions} facilities={allFacilities} onRegionClick={handleRegionClick} selectedRegion={selectedRegion} />
+        <ChoroplethMap 
+          regions={regions} 
+          facilities={allFacilities} 
+          onRegionClick={handleRegionClick} 
+          onFacilityClick={handleFacilityClick}
+          selectedRegion={selectedRegion} 
+          selectedFacilityId={selectedFacilityId}
+        />
       </div>
 
       <div className="mt-6 grid grid-cols-3 gap-4">
@@ -156,10 +177,19 @@ export default function App() {
           </h2>
 
           {selectedFacilities.map((f) => (
-            <div key={f.facility_id} className="border rounded p-3 mb-2">
+            <button
+              key={f.facility_id}
+              onClick={() => handleFacilityClick(f)}
+              className={`w-full text-left border rounded p-3 mb-2 hover:bg-accent transition-colors ${
+                selectedFacilityId === f.facility_id ? "ring-2 ring-primary bg-accent" : ""
+              }`}
+            >
               <div className="font-semibold">{f.name}</div>
               <div className="text-sm">
-                Readiness: <b>{f.assessment.readiness}</b> · Confidence: {f.assessment.confidence}
+                Readiness: <span className={
+                  f.assessment.readiness === "ready" ? "text-green-600 font-medium" :
+                  f.assessment.readiness === "fragile" ? "text-amber-600 font-medium" : "text-red-600 font-medium"
+                }>{f.assessment.readiness}</span> · Confidence: {Math.round(f.assessment.confidence * 100)}%
               </div>
 
               {f.assessment.flags.map((fl, i) => (
@@ -173,7 +203,7 @@ export default function App() {
                   Missing signals: {f.assessment.missing_required.join(", ")}
                 </div>
               )}
-            </div>
+            </button>
           ))}
         </div>
       </div>

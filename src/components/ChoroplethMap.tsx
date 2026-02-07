@@ -24,7 +24,9 @@ type ChoroplethMapProps = {
   regions: RegionSummary[];
   facilities?: Facility[];
   onRegionClick: (region: string) => void;
+  onFacilityClick?: (facility: Facility) => void;
   selectedRegion: string | null;
+  selectedFacilityId?: string | null;
 };
 
 const STATUS_COLORS: Record<string, string> = {
@@ -107,12 +109,15 @@ export default function ChoroplethMap({
   regions,
   facilities = [],
   onRegionClick,
+  onFacilityClick,
   selectedRegion,
+  selectedFacilityId,
 }: ChoroplethMapProps) {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<L.Map | null>(null);
   const geoJsonLayerRef = useRef<L.GeoJSON | null>(null);
   const markersLayerRef = useRef<L.LayerGroup | null>(null);
+  const markersRef = useRef<Map<string, L.CircleMarker>>(new Map());
 
   // Initialize map
   useEffect(() => {
@@ -257,6 +262,7 @@ export default function ChoroplethMap({
       map.removeLayer(markersLayerRef.current);
       markersLayerRef.current = null;
     }
+    markersRef.current.clear();
 
     // Only add markers for facilities with coordinates
     const facilitiesWithCoords = facilities.filter((f) => f.lat && f.lng);
@@ -267,14 +273,15 @@ export default function ChoroplethMap({
 
     facilitiesWithCoords.forEach((facility) => {
       const color = READINESS_COLORS[facility.assessment.readiness] || "#94a3b8";
+      const isSelected = selectedFacilityId === facility.facility_id;
       
       const marker = L.circleMarker([facility.lat!, facility.lng!], {
-        radius: 6,
+        radius: isSelected ? 10 : 6,
         fillColor: color,
-        color: "#fff",
-        weight: 2,
+        color: isSelected ? "#000" : "#fff",
+        weight: isSelected ? 3 : 2,
         opacity: 1,
-        fillOpacity: 0.9,
+        fillOpacity: isSelected ? 1 : 0.9,
       });
 
       marker.bindTooltip(
@@ -282,11 +289,30 @@ export default function ChoroplethMap({
         { sticky: true }
       );
 
+      marker.on("click", () => {
+        if (onFacilityClick) {
+          onFacilityClick(facility);
+        }
+      });
+
+      markersRef.current.set(facility.facility_id, marker);
       markersLayerRef.current!.addLayer(marker);
     });
 
     markersLayerRef.current.addTo(map);
-  }, [facilities]);
+  }, [facilities, selectedFacilityId, onFacilityClick]);
+
+  // Pan to selected facility
+  useEffect(() => {
+    if (!mapRef.current || !selectedFacilityId) return;
+
+    const marker = markersRef.current.get(selectedFacilityId);
+    if (marker) {
+      const latLng = marker.getLatLng();
+      mapRef.current.setView(latLng, 9, { animate: true });
+      marker.openTooltip();
+    }
+  }, [selectedFacilityId]);
 
   return (
     <div className="relative">
