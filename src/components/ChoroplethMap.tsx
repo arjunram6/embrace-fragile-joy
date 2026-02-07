@@ -7,8 +7,22 @@ type RegionSummary = {
   counts: { ready: number; fragile: number; absent: number; total: number };
 };
 
+type Facility = {
+  facility_id: string;
+  name: string;
+  lat?: number;
+  lng?: number;
+  assessment: {
+    readiness: "ready" | "fragile" | "absent";
+    confidence: number;
+    missing_required: string[];
+    flags: { type: string; severity: string; message: string }[];
+  };
+};
+
 type ChoroplethMapProps = {
   regions: RegionSummary[];
+  facilities?: Facility[];
   onRegionClick: (region: string) => void;
   selectedRegion: string | null;
 };
@@ -83,14 +97,22 @@ const REGION_ALIASES: Record<string, string> = {
   "sh": "ashanti",
 };
 
+const READINESS_COLORS: Record<string, string> = {
+  ready: "#22c55e",
+  fragile: "#f59e0b",
+  absent: "#ef4444",
+};
+
 export default function ChoroplethMap({
   regions,
+  facilities = [],
   onRegionClick,
   selectedRegion,
 }: ChoroplethMapProps) {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<L.Map | null>(null);
   const geoJsonLayerRef = useRef<L.GeoJSON | null>(null);
+  const markersLayerRef = useRef<L.LayerGroup | null>(null);
 
   // Initialize map
   useEffect(() => {
@@ -223,6 +245,48 @@ export default function ChoroplethMap({
       })
       .catch((err) => console.error("Failed to load GeoJSON:", err));
   }, [regions, selectedRegion, onRegionClick]);
+
+  // Add facility markers
+  useEffect(() => {
+    if (!mapRef.current) return;
+
+    const map = mapRef.current;
+
+    // Remove existing markers
+    if (markersLayerRef.current) {
+      map.removeLayer(markersLayerRef.current);
+      markersLayerRef.current = null;
+    }
+
+    // Only add markers for facilities with coordinates
+    const facilitiesWithCoords = facilities.filter((f) => f.lat && f.lng);
+    
+    if (facilitiesWithCoords.length === 0) return;
+
+    markersLayerRef.current = L.layerGroup();
+
+    facilitiesWithCoords.forEach((facility) => {
+      const color = READINESS_COLORS[facility.assessment.readiness] || "#94a3b8";
+      
+      const marker = L.circleMarker([facility.lat!, facility.lng!], {
+        radius: 6,
+        fillColor: color,
+        color: "#fff",
+        weight: 2,
+        opacity: 1,
+        fillOpacity: 0.9,
+      });
+
+      marker.bindTooltip(
+        `<strong>${facility.name}</strong><br/>Readiness: ${facility.assessment.readiness}<br/>Confidence: ${Math.round(facility.assessment.confidence * 100)}%`,
+        { sticky: true }
+      );
+
+      markersLayerRef.current!.addLayer(marker);
+    });
+
+    markersLayerRef.current.addTo(map);
+  }, [facilities]);
 
   return (
     <div className="relative">

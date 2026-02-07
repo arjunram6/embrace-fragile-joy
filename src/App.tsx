@@ -12,6 +12,8 @@ type RegionSummary = {
 type Facility = {
   facility_id: string;
   name: string;
+  lat?: number;
+  lng?: number;
   assessment: {
     readiness: "ready" | "fragile" | "absent";
     confidence: number;
@@ -78,7 +80,7 @@ export default function App() {
 
       {/* Choropleth Map */}
       <div className="mt-6">
-        <ChoroplethMap regions={regions} onRegionClick={loadFacilities} selectedRegion={selectedRegion} />
+        <ChoroplethMap regions={regions} facilities={facilities} onRegionClick={loadFacilities} selectedRegion={selectedRegion} />
       </div>
 
       <div className="mt-6 grid grid-cols-3 gap-4">
