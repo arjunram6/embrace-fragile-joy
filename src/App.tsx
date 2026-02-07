@@ -31,6 +31,7 @@ export default function App() {
   const [selectedFacilities, setSelectedFacilities] = useState<Facility[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Load regions and all facilities
   useEffect(() => {
@@ -114,23 +115,39 @@ export default function App() {
       <div className="mt-6 grid grid-cols-3 gap-4">
         <div>
           <h2 className="font-semibold mb-2">Regions</h2>
-          {loading && <p className="text-sm text-muted-foreground">Loading regions...</p>}
-          {error && <p className="text-sm text-destructive">{error}</p>}
-          {!loading && !error && regions.length === 0 && (
-            <p className="text-sm text-muted-foreground">No regions found.</p>
-          )}
-          {regions.map((r) => (
-            <button
-              key={r.region}
-              onClick={() => handleRegionClick(r.region)}
-              className={`w-full text-left border rounded p-3 mb-2 hover:bg-accent ${
-                selectedRegion === r.region ? "ring-2 ring-primary" : ""
-              }`}
-            >
-              <div className="font-medium">{r.region}</div>
-              <div className="text-sm">Status: {r.status}</div>
-            </button>
-          ))}
+          <input
+            type="text"
+            placeholder="Search regions..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full border rounded px-3 py-2 mb-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+          />
+          <div className="max-h-[400px] overflow-y-auto">
+            {loading && <p className="text-sm text-muted-foreground">Loading regions...</p>}
+            {error && <p className="text-sm text-destructive">{error}</p>}
+            {!loading && !error && regions.length === 0 && (
+              <p className="text-sm text-muted-foreground">No regions found.</p>
+            )}
+            {regions
+              .filter((r) => r.region.toLowerCase().includes(searchQuery.toLowerCase()))
+              .map((r) => (
+                <button
+                  key={r.region}
+                  onClick={() => handleRegionClick(r.region)}
+                  className={`w-full text-left border rounded p-3 mb-2 hover:bg-accent ${
+                    selectedRegion === r.region ? "ring-2 ring-primary" : ""
+                  }`}
+                >
+                  <div className="font-medium">{r.region}</div>
+                  <div className="text-sm text-muted-foreground">
+                    Status: <span className={
+                      r.status === "resilient" ? "text-green-600" :
+                      r.status === "fragile" ? "text-amber-600" : "text-red-600"
+                    }>{r.status}</span> · {r.counts.total} facilities
+                  </div>
+                </button>
+              ))}
+          </div>
         </div>
 
         <div className="col-span-2">
