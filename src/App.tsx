@@ -50,15 +50,18 @@ export default function App() {
       });
   }, [capability]);
 
-  const loadFacilities = useCallback((region: string) => {
-    setSelectedRegion(region);
-    fetch(`${API_BASE}/facilities?capability=${capability}&region=${encodeURIComponent(region)}&limit=200`, {
-      headers: { "ngrok-skip-browser-warning": "1" },
-    })
-      .then((r) => r.json())
-      .then((d) => setFacilities(d.items || []))
-      .catch(() => setFacilities([]));
-  }, [capability]);
+  const loadFacilities = useCallback(
+    (region: string) => {
+      setSelectedRegion(region);
+      fetch(`${API_BASE}/facilities?capability=${capability}&region=${encodeURIComponent(region)}&limit=200`, {
+        headers: { "ngrok-skip-browser-warning": "1" },
+      })
+        .then((r) => r.json())
+        .then((d) => setFacilities(d.items || []))
+        .catch(() => setFacilities([]));
+    },
+    [capability],
+  );
 
   return (
     <div className="p-6 max-w-6xl mx-auto">
@@ -75,11 +78,7 @@ export default function App() {
 
       {/* Choropleth Map */}
       <div className="mt-6">
-        <ChoroplethMap
-          regions={regions}
-          onRegionClick={loadFacilities}
-          selectedRegion={selectedRegion}
-        />
+        <ChoroplethMap regions={regions} onRegionClick={loadFacilities} selectedRegion={selectedRegion} />
       </div>
 
       <div className="mt-6 grid grid-cols-3 gap-4">
