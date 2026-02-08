@@ -8,7 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "./components/ui/tabs";
 import { findFacilityCoords } from "./lib/ghana-city-coords";
 import { API_BASE_URL } from "./config";
 import vitalLogo from "./assets/vital-logo.png";
-import billGates from "./assets/bill-gates.png";
+import virtueFoundationLogo from "./assets/virtue-foundation-logo.avif";
 type RegionSummary = {
   region: string;
   status: "desert" | "fragile" | "resilient";
@@ -150,7 +150,7 @@ export default function App() {
             <p className="text-sm text-muted-foreground mt-1">AI-derived readiness signals from unstructured facility data</p>
           </div>
           <div className="flex items-center gap-3">
-            <img src={billGates} alt="Bill Gates" className="h-16 w-16 rounded-full object-cover" />
+            <img src={virtueFoundationLogo} alt="Virtue Foundation" className="h-16 w-auto" />
             <img src={vitalLogo} alt="VITAL Logo" className="h-16 w-auto" />
           </div>
         </div>
