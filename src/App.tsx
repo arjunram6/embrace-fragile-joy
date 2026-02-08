@@ -3,7 +3,7 @@ import ChoroplethMap from "./components/ChoroplethMap";
 import FacilityCard from "./components/FacilityCard";
 import { findFacilityCoords } from "./lib/ghana-city-coords";
 
-const API_BASE = "https://epexegetic-doris-quiescently.ngrok-free.dev";
+import { API_BASE_URL } from "./config";
 
 type RegionSummary = {
   region: string;
@@ -63,7 +63,7 @@ export default function App() {
     setError(null);
     
     // Fetch regions
-    fetch(`${API_BASE}/regions/summary?capability=${capability}`, {
+    fetch(`${API_BASE_URL}/regions/summary?capability=${capability}`, {
       headers: { "ngrok-skip-browser-warning": "1" },
     })
       .then((r) => {
@@ -78,7 +78,7 @@ export default function App() {
         const facilityPromises = regionItems
           .filter((r: RegionSummary) => r.region !== "Unknown")
           .map((r: RegionSummary) =>
-            fetch(`${API_BASE}/facilities?capability=${capability}&region=${encodeURIComponent(r.region)}&limit=200`, {
+            fetch(`${API_BASE_URL}/facilities?capability=${capability}&region=${encodeURIComponent(r.region)}&limit=200`, {
               headers: { "ngrok-skip-browser-warning": "1" },
             })
               .then((res) => res.json())
