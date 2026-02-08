@@ -235,10 +235,10 @@ export default function ChoroplethMap({
 
             // Clear region outlines with subtle fill on hover/selection
             return {
-              fillColor: isSelected ? "#e2e8f0" : "transparent",
+              fillColor: isSelected ? "#fce7f3" : "transparent",
               weight: isSelected ? 3 : 2,
               opacity: 1,
-              color: isSelected ? "#1e293b" : "#475569",
+              color: isSelected ? "#db2777" : "#ec4899",
               fillOpacity: isSelected ? 0.3 : 0,
             };
           },
