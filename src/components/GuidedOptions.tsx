@@ -1,8 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
-import { Loader2, MapPin, Search, AlertTriangle, Building2, CheckCircle, MessageSquare } from "lucide-react";
-import { apiGuidedOptions, apiGuidedQuery, GuidedOption, QueryResponse } from "@/lib/api";
+import { Loader2, MapPin, Search, AlertTriangle, Building2, CheckCircle, MessageSquare, RefreshCw } from "lucide-react";
+import { apiGuidedOptions, apiGuidedQuery, GuidedOption, QueryResponse, ApiError } from "@/lib/api";
 import ReactMarkdown from "react-markdown";
-
 const OPTION_ICONS: Record<string, React.ReactNode> = {
   care_near_me: <MapPin className="h-5 w-5" />,
   gaps: <AlertTriangle className="h-5 w-5" />,
@@ -65,7 +64,7 @@ export default function GuidedOptions() {
   const [inputValues, setInputValues] = useState<Record<string, string>>({});
   const [queryLoading, setQueryLoading] = useState(false);
   const [response, setResponse] = useState<QueryResponse | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<{ message: string; isTimeout?: boolean } | null>(null);
 
   useEffect(() => {
     apiGuidedOptions()
@@ -115,7 +114,11 @@ export default function GuidedOptions() {
       setResponse(result);
     } catch (err) {
       console.error("Query error:", err);
-      setError(err instanceof Error ? err.message : "Failed to get response");
+      if (err instanceof ApiError) {
+        setError({ message: err.message, isTimeout: err.isTimeout });
+      } else {
+        setError({ message: "Failed to connect to the server. Please try again." });
+      }
     } finally {
       setQueryLoading(false);
     }
@@ -202,7 +205,14 @@ export default function GuidedOptions() {
 
         {error && (
           <div className="border border-destructive/50 rounded-lg p-4 bg-destructive/10">
-            <p className="text-sm text-destructive">{error}</p>
+            <p className="text-sm text-destructive">{error.message}</p>
+            <button
+              onClick={handleSubmit}
+              className="mt-2 flex items-center gap-1 text-xs text-primary hover:underline"
+            >
+              <RefreshCw className="h-3 w-3" />
+              Try again
+            </button>
           </div>
         )}
       </div>
