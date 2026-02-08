@@ -2,6 +2,9 @@ import { useEffect, useState, useCallback } from "react";
 import ChoroplethMap from "./components/ChoroplethMap";
 import FacilityCard from "./components/FacilityCard";
 import AgentSearchBar from "./components/AgentSearchBar";
+import ChatPanel from "./components/ChatPanel";
+import GuidedOptions from "./components/GuidedOptions";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "./components/ui/tabs";
 import { findFacilityCoords } from "./lib/ghana-city-coords";
 
 import { API_BASE_URL } from "./config";
@@ -137,9 +140,24 @@ export default function App() {
       <h1 className="text-2xl font-bold">Capability Readiness & Fragility</h1>
       <p className="text-sm text-muted-foreground mt-1">AI-derived readiness signals from unstructured facility data</p>
 
-      {/* Agent Search Bar */}
-      <div className="mt-4">
-        <AgentSearchBar />
+      {/* Agent Interaction Tabs */}
+      <div className="mt-6">
+        <Tabs defaultValue="search" className="w-full">
+          <TabsList className="grid w-full grid-cols-3 mb-4">
+            <TabsTrigger value="search">Quick Search</TabsTrigger>
+            <TabsTrigger value="guided">Guided Options</TabsTrigger>
+            <TabsTrigger value="chat">Chat</TabsTrigger>
+          </TabsList>
+          <TabsContent value="search">
+            <AgentSearchBar />
+          </TabsContent>
+          <TabsContent value="guided">
+            <GuidedOptions />
+          </TabsContent>
+          <TabsContent value="chat">
+            <ChatPanel />
+          </TabsContent>
+        </Tabs>
       </div>
 
       <div className="mt-4">
