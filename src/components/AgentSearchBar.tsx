@@ -1,13 +1,13 @@
 import { useState, useCallback } from "react";
-import { Search, Loader2, X, Bot, Sparkles } from "lucide-react";
-import { apiQuery, QueryResponse } from "@/lib/api";
+import { Search, Loader2, X, Bot, Sparkles, AlertTriangle, RefreshCw } from "lucide-react";
+import { apiQuery, QueryResponse, ApiError } from "@/lib/api";
 import ReactMarkdown from "react-markdown";
 
 export default function AgentSearchBar() {
   const [query, setQuery] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [response, setResponse] = useState<QueryResponse | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<{ message: string; isTimeout?: boolean } | null>(null);
 
   const handleSearch = useCallback(async () => {
     if (!query.trim() || isLoading) return;
@@ -21,7 +21,11 @@ export default function AgentSearchBar() {
       setResponse(result);
     } catch (err) {
       console.error("Agent query failed:", err);
-      setError(err instanceof Error ? err.message : "Failed to get response from agent");
+      if (err instanceof ApiError) {
+        setError({ message: err.message, isTimeout: err.isTimeout });
+      } else {
+        setError({ message: "Failed to connect to the server. Please try again." });
+      }
     } finally {
       setIsLoading(false);
     }
@@ -68,8 +72,49 @@ export default function AgentSearchBar() {
         </div>
       </div>
 
+      {/* Loading indicator with message */}
+      {isLoading && (
+        <div className="border rounded-lg p-4 bg-muted/30">
+          <div className="flex items-center gap-3">
+            <Loader2 className="h-5 w-5 animate-spin text-primary" />
+            <div>
+              <p className="text-sm font-medium">Processing your query...</p>
+              <p className="text-xs text-muted-foreground">This may take a moment if the server is starting up.</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Error Panel */}
+      {error && !isLoading && (
+        <div className="border border-destructive/30 rounded-lg bg-destructive/5 overflow-hidden">
+          <div className="flex items-center justify-between px-4 py-2 bg-destructive/10 border-b border-destructive/20">
+            <div className="flex items-center gap-2 text-sm text-destructive">
+              <AlertTriangle className="h-4 w-4" />
+              <span>{error.isTimeout ? "Request Timed Out" : "Error"}</span>
+            </div>
+            <button
+              onClick={clearResponse}
+              className="p-1 hover:bg-destructive/20 rounded-md transition-colors"
+            >
+              <X className="h-4 w-4 text-destructive" />
+            </button>
+          </div>
+          <div className="p-4">
+            <p className="text-sm text-destructive">{error.message}</p>
+            <button
+              onClick={handleSearch}
+              className="mt-3 flex items-center gap-2 text-sm text-primary hover:underline"
+            >
+              <RefreshCw className="h-3 w-3" />
+              Try again
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Response Panel */}
-      {(response || error) && (
+      {response && !isLoading && (
         <div className="border rounded-lg bg-card shadow-sm overflow-hidden">
           <div className="flex items-center justify-between px-4 py-2 bg-muted/50 border-b">
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -95,13 +140,9 @@ export default function AgentSearchBar() {
           </div>
           
           <div className="p-4">
-            {error ? (
-              <p className="text-destructive text-sm">{error}</p>
-            ) : response ? (
-              <div className="prose prose-sm max-w-none dark:prose-invert">
-                <ReactMarkdown>{response.answer}</ReactMarkdown>
-              </div>
-            ) : null}
+            <div className="prose prose-sm max-w-none dark:prose-invert">
+              <ReactMarkdown>{response.answer}</ReactMarkdown>
+            </div>
             
             {response?.sub_agent && (
               <p className="mt-3 text-xs text-muted-foreground flex items-center gap-1">
