@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react";
-import { Search, Loader2, X, Bot } from "lucide-react";
+import { Search, Loader2, X, Bot, Sparkles } from "lucide-react";
 import { apiQuery, QueryResponse } from "@/lib/api";
 import ReactMarkdown from "react-markdown";
 
@@ -104,9 +104,13 @@ export default function AgentSearchBar() {
             ) : null}
             
             {response?.sub_agent && (
-              <p className="mt-3 text-xs text-muted-foreground">
-                Handled by: {response.sub_agent}
-                {response.used_medical_reasoning && " • Used medical reasoning"}
+              <p className="mt-3 text-xs text-muted-foreground flex items-center gap-1">
+                <span>Handled by: {response.sub_agent}</span>
+                {response.used_medical_reasoning && (
+                  <span className="inline-flex items-center gap-1 ml-2">
+                    <Sparkles className="h-3 w-3" /> Medical reasoning
+                  </span>
+                )}
               </p>
             )}
           </div>
