@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import ChoroplethMap from "./components/ChoroplethMap";
 import FacilityCard from "./components/FacilityCard";
-import AgentSearchBar from "./components/AgentSearchBar";
+
 import ChatPanel from "./components/ChatPanel";
 import GuidedOptions from "./components/GuidedOptions";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./components/ui/tabs";
@@ -159,15 +159,11 @@ export default function App() {
 
         {/* Agent Interaction Tabs */}
         <div className="mt-6">
-          <Tabs defaultValue="search" className="w-full">
-            <TabsList className="grid w-full grid-cols-3 mb-4">
-              <TabsTrigger value="search">Quick Search</TabsTrigger>
+          <Tabs defaultValue="guided" className="w-full">
+            <TabsList className="grid w-full grid-cols-2 mb-4">
               <TabsTrigger value="guided">Guided Options</TabsTrigger>
               <TabsTrigger value="chat">Chat</TabsTrigger>
             </TabsList>
-            <TabsContent value="search">
-              <AgentSearchBar />
-            </TabsContent>
             <TabsContent value="guided">
               <GuidedOptions />
             </TabsContent>
