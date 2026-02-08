@@ -140,7 +140,6 @@ export default function ChoroplethMap({
   const mapRef = useRef<L.Map | null>(null);
   const geoJsonLayerRef = useRef<L.GeoJSON | null>(null);
   const markersLayerRef = useRef<L.LayerGroup | null>(null);
-  const labelsLayerRef = useRef<L.LayerGroup | null>(null);
   const markersRef = useRef<Map<string, L.CircleMarker>>(new Map());
 
   // Initialize map
@@ -271,58 +270,6 @@ export default function ChoroplethMap({
             });
           },
         }).addTo(map);
-
-        // Remove existing labels
-        if (labelsLayerRef.current) {
-          map.removeLayer(labelsLayerRef.current);
-          labelsLayerRef.current = null;
-        }
-
-        // Add region labels with facility counts
-        labelsLayerRef.current = L.layerGroup();
-
-        geojson.features.forEach((feature: GeoJSON.Feature) => {
-          if (!feature?.properties) return;
-
-          const featureName = getFeatureRegionName(feature.properties as Record<string, unknown>);
-          const normalizedName = normalizeRegionName(featureName);
-          const regionData = aggregatedLookup.get(normalizedName);
-
-          // Calculate centroid of the region
-          const bounds = L.geoJSON(feature).getBounds();
-          const center = bounds.getCenter();
-
-          const facilityCount = regionData?.counts.total ?? 0;
-          const displayName = featureName.replace(/ Region$/i, "");
-
-          const labelIcon = L.divIcon({
-            className: "region-label",
-            html: `
-              <div style="
-                background: rgba(255, 255, 255, 0.95);
-                border: 1px solid #475569;
-                border-radius: 4px;
-                padding: 2px 6px;
-                font-size: 10px;
-                font-weight: 600;
-                color: #1e293b;
-                white-space: nowrap;
-                box-shadow: 0 1px 3px rgba(0,0,0,0.2);
-                text-align: center;
-              ">
-                <div style="font-size: 9px; font-weight: 700;">${displayName}</div>
-                <div style="font-size: 8px; color: #64748b;">${facilityCount} facilities</div>
-              </div>
-            `,
-            iconSize: [0, 0],
-            iconAnchor: [0, 0],
-          });
-
-          const label = L.marker(center, { icon: labelIcon, interactive: false });
-          labelsLayerRef.current!.addLayer(label);
-        });
-
-        labelsLayerRef.current.addTo(map);
       })
       .catch((err) => console.error("Failed to load GeoJSON:", err));
   }, [regions, selectedRegion, onRegionClick]);
@@ -391,6 +338,21 @@ export default function ChoroplethMap({
   }, [selectedFacilityId]);
 
   return (
-    <div ref={mapContainerRef} className="h-[400px] w-full rounded-lg border" />
+    <div className="relative">
+      <div ref={mapContainerRef} className="h-[400px] w-full rounded-lg border" />
+      
+      {/* Legend */}
+      <div className="absolute bottom-4 left-4 bg-white/90 backdrop-blur rounded-lg p-3 shadow-md z-[1000]">
+        <div className="text-xs font-semibold mb-2">Status</div>
+        <div className="space-y-1">
+          {Object.entries(STATUS_COLORS).map(([status, color]) => (
+            <div key={status} className="flex items-center gap-2">
+              <div className="w-4 h-4 rounded" style={{ backgroundColor: color }} />
+              <span className="text-xs capitalize">{status}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
   );
 }
