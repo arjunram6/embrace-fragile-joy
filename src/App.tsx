@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import ChoroplethMap from "./components/ChoroplethMap";
 import FacilityCard from "./components/FacilityCard";
+import AgentSearchBar from "./components/AgentSearchBar";
 import { findFacilityCoords } from "./lib/ghana-city-coords";
 
 import { API_BASE_URL } from "./config";
@@ -134,7 +135,12 @@ export default function App() {
   return (
     <div className="p-6 max-w-6xl mx-auto">
       <h1 className="text-2xl font-bold">Capability Readiness & Fragility</h1>
-      <p className="text-sm text-gray-600 mt-1">AI-derived readiness signals from unstructured facility data</p>
+      <p className="text-sm text-muted-foreground mt-1">AI-derived readiness signals from unstructured facility data</p>
+
+      {/* Agent Search Bar */}
+      <div className="mt-4">
+        <AgentSearchBar />
+      </div>
 
       <div className="mt-4">
         <select className="border rounded px-3 py-2" value={capability} onChange={(e) => setCapability(e.target.value)}>
