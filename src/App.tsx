@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "./components/ui/tabs";
 import { findFacilityCoords } from "./lib/ghana-city-coords";
 import { API_BASE_URL } from "./config";
 import vitalLogo from "./assets/vital-logo.png";
+import billGates from "./assets/bill-gates.png";
 type RegionSummary = {
   region: string;
   status: "desert" | "fragile" | "resilient";
@@ -148,7 +149,10 @@ export default function App() {
             <h1 className="text-2xl font-bold">Capability Readiness & Fragility</h1>
             <p className="text-sm text-muted-foreground mt-1">AI-derived readiness signals from unstructured facility data</p>
           </div>
-          <img src={vitalLogo} alt="VITAL Logo" className="h-16 w-auto" />
+          <div className="flex items-center gap-3">
+            <img src={billGates} alt="Bill Gates" className="h-16 w-16 rounded-full object-cover" />
+            <img src={vitalLogo} alt="VITAL Logo" className="h-16 w-auto" />
+          </div>
         </div>
 
         {/* Agent Interaction Tabs */}
