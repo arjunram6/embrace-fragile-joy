@@ -340,19 +340,6 @@ export default function ChoroplethMap({
   return (
     <div className="relative">
       <div ref={mapContainerRef} className="h-[400px] w-full rounded-lg border" />
-      
-      {/* Legend */}
-      <div className="absolute bottom-4 left-4 bg-white/90 backdrop-blur rounded-lg p-3 shadow-md z-[1000]">
-        <div className="text-xs font-semibold mb-2">Status</div>
-        <div className="space-y-1">
-          {Object.entries(STATUS_COLORS).map(([status, color]) => (
-            <div key={status} className="flex items-center gap-2">
-              <div className="w-4 h-4 rounded" style={{ backgroundColor: color }} />
-              <span className="text-xs capitalize">{status}</span>
-            </div>
-          ))}
-        </div>
-      </div>
     </div>
   );
 }
