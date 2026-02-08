@@ -7,6 +7,7 @@ import GuidedOptions from "./components/GuidedOptions";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./components/ui/tabs";
 import { findFacilityCoords } from "./lib/ghana-city-coords";
 import { API_BASE_URL } from "./config";
+import vitalLogo from "./assets/vital-logo.png";
 type RegionSummary = {
   region: string;
   status: "desert" | "fragile" | "resilient";
@@ -140,8 +141,13 @@ export default function App() {
     }
   }, [allFacilities, selectedRegion]);
   return <div className="p-6 max-w-6xl mx-auto">
-      <h1 className="text-2xl font-bold">Capability Readiness & Fragility</h1>
-      <p className="text-sm text-muted-foreground mt-1">AI-derived readiness signals from unstructured facility data</p>
+      <div className="flex justify-between items-start">
+        <div>
+          <h1 className="text-2xl font-bold">Capability Readiness & Fragility</h1>
+          <p className="text-sm text-muted-foreground mt-1">AI-derived readiness signals from unstructured facility data</p>
+        </div>
+        <img src={vitalLogo} alt="VITAL Logo" className="h-16 w-auto" />
+      </div>
 
       {/* Agent Interaction Tabs */}
       <div className="mt-6">
