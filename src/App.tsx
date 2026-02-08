@@ -146,7 +146,7 @@ export default function App() {
       <div className="p-6 max-w-6xl mx-auto">
         <div className="flex justify-between items-start">
           <div>
-            <h1 className="text-2xl font-bold">Capability Readiness & Fragility</h1>
+            <h1 className="text-2xl font-bold">VITAL: Virtue-Informed Targeting of Actionable Life-Saving</h1>
             <p className="text-sm text-muted-foreground mt-1">AI-derived readiness signals from unstructured facility data</p>
           </div>
           <div className="flex items-center gap-3">
