@@ -142,12 +142,6 @@ export default function App() {
   }, [allFacilities, selectedRegion]);
   return (
     <div className="min-h-screen">
-      {/* Racing stripes */}
-      <div className="w-full flex flex-col gap-1 py-1">
-        <div className="h-0.5 bg-stripe w-full"></div>
-        <div className="h-0.5 bg-stripe w-full"></div>
-      </div>
-      
       <div className="p-6 max-w-6xl mx-auto">
         <div className="flex justify-between items-start">
           <div>
