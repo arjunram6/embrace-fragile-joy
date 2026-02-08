@@ -5,6 +5,7 @@ import AgentSearchBar from "./components/AgentSearchBar";
 import ChatPanel from "./components/ChatPanel";
 import GuidedOptions from "./components/GuidedOptions";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./components/ui/tabs";
+import ApiStatusIndicator from "./components/ApiStatusIndicator";
 import { findFacilityCoords } from "./lib/ghana-city-coords";
 import { API_BASE_URL } from "./config";
 import vitalLogo from "./assets/vital-logo.png";
@@ -148,6 +149,7 @@ export default function App() {
           <div>
             <h1 className="text-2xl font-bold">VITAL: Virtue-Informed Targeting of Actionable Life-Saving</h1>
             <p className="text-sm text-muted-foreground mt-1">AI-derived readiness signals from unstructured facility data</p>
+            <ApiStatusIndicator />
           </div>
           <div className="flex items-center gap-3">
             <img src={virtueFoundationLogo} alt="Virtue Foundation" className="h-16 w-auto" />
